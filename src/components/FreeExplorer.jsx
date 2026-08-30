@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Volume2, Play, Info, Sparkles, Activity, Radio } from 'lucide-react';
 import { GUITAR_STRINGS } from '../data/guitarStrings';
 import { soundEngine } from '../utils/audioEngine';

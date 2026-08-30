@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Volume2, Play, Sparkles, BookOpen, Layers, Lightbulb, Music, Zap, CheckCircle2 } from 'lucide-react';
+import { useState, Fragment } from 'react';
+import { Volume2, Play, BookOpen, Layers, Lightbulb, Music, Zap } from 'lucide-react';
 import { GUITAR_CHORDS, POPULAR_PROGRESSIONS } from '../data/guitarChords';
 import { soundEngine } from '../utils/audioEngine';
 import ChordDiagram from './ChordDiagram';
@@ -94,7 +94,8 @@ export default function ChordsSection({ notation }) {
             onClick={() => setViewMode('library')}
           >
             <BookOpen size={16} />
-            Biblioteca & Digitación
+            <span className="btn-full-label">Biblioteca & Digitación</span>
+            <span className="btn-short-label">Biblioteca</span>
           </button>
           <button
             type="button"
@@ -102,7 +103,8 @@ export default function ChordsSection({ notation }) {
             onClick={() => setViewMode('trainer')}
           >
             <Zap size={16} />
-            ⚡ Entrenador de Cambios
+            <span className="btn-full-label">⚡ Entrenador de Cambios</span>
+            <span className="btn-short-label">Entrenador</span>
           </button>
         </div>
       </div>
@@ -306,10 +308,10 @@ export default function ChordsSection({ notation }) {
                   <div className="prog-name">{prog.name}</div>
                   <div className="prog-chords-sequence">
                     {(notation === 'ES' ? prog.solfege : prog.chords).map((ch, cIdx) => (
-                      <React.Fragment key={`ch-${cIdx}`}>
+                      <Fragment key={`ch-${cIdx}`}>
                         <span className="sequence-chord-badge">{ch}</span>
                         {cIdx < prog.chords.length - 1 && <span className="sequence-arrow">➔</span>}
-                      </React.Fragment>
+                      </Fragment>
                     ))}
                   </div>
                   <div className="prog-examples">{prog.songs}</div>

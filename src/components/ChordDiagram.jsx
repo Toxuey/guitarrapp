@@ -1,5 +1,3 @@
-import React from 'react';
-
 const FINGER_COLORS = {
   1: '#38bdf8', // 1: Índice (Cyan brillante)
   2: '#4ade80', // 2: Medio (Verde esmeralda)

@@ -780,6 +780,8 @@
   gap: 0.4rem;
   cursor: grab;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
   transition: all var(--transition-normal);
   position: relative;
   box-shadow: var(--shadow-sm);
@@ -943,6 +945,10 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .chords-header-bar {
@@ -957,6 +963,10 @@
   gap: 1rem;
   flex-wrap: wrap;
   box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .chords-main-title {
@@ -977,6 +987,7 @@
   padding: 0.25rem;
   display: flex;
   gap: 0.35rem;
+  box-sizing: border-box;
 }
 
 .view-mode-btn {
@@ -988,6 +999,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  box-sizing: border-box;
 }
 
 .view-mode-btn.active {
@@ -1003,6 +1015,16 @@
   gap: 0.6rem;
   overflow-x: auto;
   padding-bottom: 0.25rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.chord-filters-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .filter-pill {
@@ -1014,6 +1036,8 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-subtle);
   white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .filter-pill:hover {
@@ -1039,13 +1063,21 @@
   grid-template-columns: 1.15fr 1fr;
   gap: 1.5rem;
   align-items: start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Cuadrícula de tarjetas de acordes */
 .chords-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 0.85rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .chord-item-card {
@@ -1698,10 +1730,50 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
   background: rgba(0, 0, 0, 0.25);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
+}
+
+.bpm-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.beats-selector-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+  padding: 0.15rem;
+  gap: 0.2rem;
+}
+
+.beat-toggle-btn {
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all var(--transition-fast);
+}
+
+.beat-toggle-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.beat-indicator.beat-one.active-beat {
+  background: var(--accent-emerald);
+  border-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 0 25px var(--accent-emerald-glow);
 }
 
 .bpm-text {
@@ -2490,64 +2562,1024 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   LABELS RESPONSIVOS, TOUCH DRAG & DROP Y CONTENEDOR DEL MÁSTIL
    ========================================================================== */
-@media (max-width: 960px) {
+.btn-full-label {
+  display: inline;
+}
+
+.btn-short-label {
+  display: none;
+}
+
+.guitar-fretboard-card-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 1.25rem;
+}
+
+/* Ficha flotante durante arrastre táctil y cursor montada en document.body */
+.floating-touch-badge {
+  position: fixed;
+  pointer-events: none;
+  z-index: 999999;
+  transform: translate(-50%, -65%) scale(1.12);
+  width: 78px;
+  height: 78px;
+  margin: 0;
+  border-radius: 1.15rem;
+  background: linear-gradient(135deg, rgba(45, 52, 78, 0.95), rgba(18, 20, 29, 0.98));
+  border: 2.5px solid var(--primary);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px var(--primary-glow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: left, top;
+  animation: pickUpBadge 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pickUpBadge {
+  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.7; }
+  100% { transform: translate(-50%, -65%) scale(1.12); opacity: 1; }
+}
+
+.floating-badge-note {
+  font-size: 2.1rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #ffffff;
+  line-height: 1;
+}
+
+.floating-badge-octave {
+  font-size: 0.75rem;
+  color: #c084fc;
+  font-weight: 700;
+}
+
+.note-chip.is-picked-up {
+  opacity: 0.25;
+  transform: scale(0.94);
+  border-style: dashed;
+}
+
+/* Banner de ficha seleccionada */
+.selected-badge-banner {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.22));
+  border: 1.5px solid var(--border-gold);
+  border-radius: 0.85rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  animation: popIn 0.25s ease;
+}
+
+.selected-badge-text {
+  font-size: 0.85rem;
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.selected-badge-text strong {
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+}
+
+.cancel-selection-btn {
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cancel-selection-btn:hover {
+  background: rgba(244, 63, 94, 0.3);
+  border-color: var(--accent-rose);
+  color: #fb7185;
+}
+
+/* Cuerdas esperando colocación */
+.string-lane.waiting-for-placement {
+  cursor: pointer;
+  background: rgba(245, 158, 11, 0.06);
+}
+
+.string-lane.waiting-for-placement:hover {
+  background: rgba(245, 158, 11, 0.18);
+  outline: 1.5px dashed rgba(245, 158, 11, 0.7);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN SYSTEM
+   ========================================================================== */
+
+/* --- TABLETS Y PANTALLAS MEDIANAS (Hasta 1024px) --- */
+@media (max-width: 1024px) {
   .explorer-grid-layout,
   .chords-master-layout {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 
-  .trainer-active-stage {
-    grid-template-columns: 1fr;
+  .chord-detail-inspector {
+    position: static;
+  }
+
+  .chords-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }
 }
 
+/* --- MÓVILES GRANDES Y TABLETS EN VERTICAL (Hasta 768px) --- */
 @media (max-width: 768px) {
+  .app-wrapper {
+    padding: 1rem 0.75rem 2.5rem;
+    gap: 1.15rem;
+    overflow-x: hidden;
+  }
+
+  /* Header & Navbar */
   .app-header {
-    padding: 1rem;
+    padding: 1rem 0.85rem;
+    border-radius: 1.1rem;
+    gap: 0.85rem;
   }
 
   .header-top {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .brand {
+    justify-content: flex-start;
+    gap: 0.75rem;
+  }
+
+  .brand-icon-wrapper {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand-title {
+    font-size: 1.45rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.78rem;
   }
 
   .header-actions {
     width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
+    gap: 0.45rem;
+  }
+
+  .notation-pill {
+    padding: 0.2rem;
+  }
+
+  .notation-btn {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.78rem;
+    gap: 0.3rem;
+  }
+
+  .helper-btn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .action-icon-btn {
+    padding: 0.45rem 0.7rem;
+  }
+
+  .mode-navbar {
+    padding-top: 0.75rem;
+    gap: 0.45rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mode-navbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mode-tab {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.82rem;
+    gap: 0.45rem;
+    flex-shrink: 0;
+  }
+
+  /* Mástil de Guitarra */
+  .guitar-fretboard-card {
+    min-height: 400px;
+    border-radius: 1.1rem;
   }
 
   .guitar-headstock {
-    width: 60px;
+    width: 50px;
   }
 
   .headstock-logo {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+  }
+
+  .headstock-truss-cover {
+    width: 10px;
+    height: 14px;
+  }
+
+  .guitar-nut {
+    width: 16px;
+  }
+
+  .fretboard-board {
+    padding: 0.85rem 0.45rem;
+  }
+
+  .string-lane {
+    gap: 0.45rem;
+    padding: 0.35rem 0.25rem;
+    border-radius: 0.55rem;
   }
 
   .string-number-tag {
-    min-width: 48px;
+    min-width: 36px;
+  }
+
+  .num-pill {
+    font-size: 0.95rem;
+  }
+
+  .string-subinfo {
+    display: none;
   }
 
   .drop-slot {
-    min-width: 75px;
-    height: 44px;
+    min-width: 60px;
+    max-width: 78px;
+    height: 40px;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.55rem;
   }
 
   .badge-note-main {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
+  }
+
+  .badge-octave {
+    font-size: 0.65rem;
+  }
+
+  .badge-check-icon {
+    display: none;
+  }
+
+  .empty-slot-placeholder {
+    font-size: 0.65rem;
+    gap: 0.2rem;
+  }
+
+  .string-visual-wrapper {
+    padding: 0.35rem 0;
   }
 
   .string-audio-trigger {
-    min-width: 80px;
+    min-width: 38px;
+    justify-content: flex-end;
+  }
+
+  .pluck-btn {
+    padding: 0.35rem 0.45rem;
+    font-size: 0.72rem;
+    gap: 0.2rem;
   }
 
   .freq-text {
     display: none;
   }
 
+  .fretboard-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0;
+  }
+
+  .order-toggle {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.35rem;
+  }
+
+  .order-btn {
+    flex: 1 1 auto;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.5rem;
+  }
+
+  .fretboard-legend {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-size: 0.72rem;
+  }
+
+  /* Banco de Fichas (Drag Badge Deck) */
+  .badge-deck-container {
+    padding: 1.15rem;
+    border-radius: 1.1rem;
+    gap: 1rem;
+  }
+
+  .deck-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .progress-card {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .badges-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.55rem;
+  }
+
+  .note-chip {
+    padding: 0.75rem 0.35rem;
+    min-height: 66px;
+    border-radius: 0.75rem;
+  }
+
+  .chip-note-name {
+    font-size: 1.65rem;
+  }
+
+  .chip-drag-handle {
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+  }
+
+  .deck-actions-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .deck-action-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 0.55rem 0.5rem;
+  }
+
+  .deck-action-btn.hint-btn {
+    grid-column: span 2;
+  }
+
+  .completion-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.15rem 1rem;
+    gap: 0.85rem;
+  }
+
+  .completion-banner .deck-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Sección de 12 Acordes */
+  .chords-section-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .chords-header-bar {
+    padding: 1rem 0.85rem;
+    border-radius: 1.1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .chords-main-title {
+    font-size: 1.2rem;
+  }
+
+  .view-mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .view-mode-btn {
+    justify-content: center;
+    font-size: 0.78rem;
+    padding: 0.45rem 0.4rem;
+    text-align: center;
+  }
+
+  .chord-filters-bar {
+    padding-bottom: 0.35rem;
+    gap: 0.35rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .chord-filters-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-pill {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .chords-master-layout {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    gap: 1.25rem;
+    box-sizing: border-box;
+  }
+
+  .chords-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .chord-item-card {
+    padding: 0.75rem 0.55rem;
+    border-radius: 0.85rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .chord-card-name {
+    font-size: 1.15rem;
+  }
+
+  .diff-tag {
+    font-size: 0.55rem;
+    padding: 0.1rem 0.25rem;
+  }
+
+  .chord-full-sub {
+    font-size: 0.62rem;
+  }
+
+  .quick-strum-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .chord-detail-inspector {
+    padding: 1.15rem 0.85rem;
+    border-radius: 1.1rem;
+    gap: 1rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .inspector-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .inspector-chord-name {
+    font-size: 1.35rem;
+  }
+
   .inspector-diagram-section {
     flex-direction: column;
+    align-items: center;
+    padding: 0.85rem 0.5rem;
+    gap: 1rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .large-diagram-box {
+    width: 100%;
+    max-width: 220px;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  .inspector-audio-actions {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .chord-action-btn {
+    width: 100%;
+    font-size: 0.82rem;
+    padding: 0.65rem 0.75rem;
+    box-sizing: border-box;
+  }
+
+  .progressions-footer-card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 1.1rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .progressions-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .progression-pill-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* Entrenador de Cambios (Chord Transition Trainer) */
+  .transition-trainer-card {
+    padding: 1.15rem 1rem;
+    border-radius: 1.1rem;
+    gap: 1rem;
+  }
+
+  .trainer-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .trainer-title {
+    font-size: 1.15rem;
+  }
+
+  .pairs-buttons-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+  }
+
+  .pair-chip-btn {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.45rem;
+    text-align: center;
+  }
+
+  .trainer-chords-selection {
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.85rem;
+    width: 100%;
+  }
+
+  .chord-picker-box {
+    width: 100%;
+  }
+
+  .chord-select-dropdown {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 0.45rem 0.65rem;
+  }
+
+  .transition-arrow-symbol {
+    margin: 0;
+    transform: rotate(90deg);
+  }
+
+  .trainer-active-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "chordA chordB"
+      "metro metro";
+    gap: 0.75rem;
+    align-items: start;
+  }
+
+  .chord-panel-a {
+    grid-area: chordA;
+  }
+
+  .chord-panel-b {
+    grid-area: chordB;
+  }
+
+  .stage-metronome-center {
+    grid-area: metro;
+    width: 100%;
+  }
+
+  .stage-chord-panel {
+    padding: 0.75rem 0.45rem;
+    border-radius: 0.85rem;
+    gap: 0.35rem;
+  }
+
+  .stage-chord-name {
+    font-size: 1.45rem;
+  }
+
+  .stage-diagram-container {
+    width: min(110px, 100%);
+  }
+
+  .metronome-beats-grid {
+    gap: 0.5rem;
+  }
+
+  .beat-indicator {
+    width: 38px;
+    height: 38px;
+    font-size: 0.95rem;
+  }
+
+  .trainer-controls-row {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .trainer-play-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.85rem;
+    padding: 0.65rem 0.85rem;
+  }
+
+  /* Modo Quiz */
+  .quiz-scoreboard {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .score-stat {
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.75rem;
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+  }
+
+  .stat-value {
+    font-size: 0.95rem;
+  }
+
+  .quiz-question-card {
+    padding: 1.15rem 1rem;
+    border-radius: 1.1rem;
+    gap: 1rem;
+  }
+
+  .question-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .sound-replay-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.78rem;
+  }
+
+  .question-prompt {
+    font-size: 1.15rem;
+    line-height: 1.35;
+  }
+
+  .quiz-options-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+  }
+
+  .quiz-option-btn {
+    padding: 0.7rem 0.45rem;
+    min-height: 82px;
+    border-radius: 0.75rem;
+  }
+
+  .option-string-note {
+    font-size: 1.45rem;
+  }
+
+  .quiz-feedback-box {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.85rem;
+  }
+
+  .next-question-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+
+  /* Explorador Libre */
+  .explorer-header-bar {
+    padding: 1rem 0.85rem;
+    border-radius: 1.1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .strum-all-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.82rem;
+    padding: 0.65rem 1rem;
+  }
+
+  .explorer-string-card {
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .card-badge-num {
+    font-size: 0.95rem;
+    min-width: 22px;
+  }
+
+  .card-note-info {
+    min-width: 55px;
+  }
+
+  .card-main-note {
+    font-size: 1.1rem;
+  }
+
+  .card-full-name {
+    font-size: 0.58rem;
+  }
+
+  .card-freq-tag {
+    font-size: 0.68rem;
+  }
+
+  .explorer-detail-panel {
+    padding: 1.15rem 1rem;
+    border-radius: 1.1rem;
+    gap: 1rem;
+  }
+
+  .panel-title {
+    font-size: 1.25rem;
+  }
+
+  .panel-spec-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  .spec-item {
+    padding: 0.5rem;
+    border-radius: 0.6rem;
+  }
+
+  .spec-label {
+    font-size: 0.62rem;
+  }
+
+  .spec-value {
+    font-size: 0.82rem;
+  }
+
+  .panel-description-box {
+    padding: 0.75rem;
+    font-size: 0.78rem;
+  }
+
+  .panel-mnemonic-hint {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.78rem;
+  }
+
+  .panel-pluck-big-btn {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 0.7rem;
+  }
+
+  /* Modal de Trucos */
+  .mnemonic-modal-card {
+    max-width: 95vw;
+    max-height: 90vh;
+    border-radius: 1.15rem;
+  }
+
+  .modal-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .modal-header p {
+    font-size: 0.72rem;
+  }
+
+  .modal-body-content {
+    padding: 0.85rem 1rem;
+    gap: 0.85rem;
+  }
+
+  .mnemonic-section-card {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    gap: 0.65rem;
+  }
+
+  .section-direction-tag {
+    font-size: 0.75rem;
+  }
+
+  .phrase-box {
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.6rem;
+  }
+
+  .phrase-lang {
+    font-size: 0.68rem;
+  }
+
+  .phrase-quote {
+    font-size: 0.9rem;
+  }
+
+  .word-chip {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.35rem;
+  }
+
+  .mnemonic-tips-card {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .mnemonic-tips-card ul {
+    font-size: 0.75rem;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 1rem;
+  }
+
+  .modal-ok-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.85rem;
+    padding: 0.6rem;
   }
 }
+
+/* --- TELÉFONOS COMPACTOS (Hasta 640px) --- */
+@media (max-width: 640px) {
+  .btn-full-label {
+    display: none;
+  }
+
+  .btn-short-label {
+    display: inline;
+  }
+
+  .header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.35rem;
+  }
+
+  .guitar-type-pill {
+    width: 100%;
+    display: flex;
+  }
+
+  .guitar-type-pill .notation-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .notation-pill {
+    flex: 1;
+    display: flex;
+  }
+
+  .notation-pill .notation-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .helper-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* --- TELÉFONOS EXTRA ESTRECHOS (Hasta 380px) --- */
+@media (max-width: 380px) {
+  .app-wrapper {
+    padding: 0.65rem 0.4rem 2rem;
+  }
+
+  .chords-cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .badges-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+
+  .drop-slot {
+    min-width: 52px;
+    max-width: 66px;
+    height: 36px;
+  }
+
+  .badge-note-main {
+    font-size: 0.95rem;
+  }
+
+  .slot-hint-text {
+    display: none;
+  }
+
+  .guitar-headstock {
+    width: 40px;
+  }
+
+  .headstock-logo {
+    font-size: 0.55rem;
+  }
+
+  .guitar-nut {
+    width: 12px;
+  }
+}
+

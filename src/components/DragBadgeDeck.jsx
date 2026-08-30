@@ -1,5 +1,56 @@
-import React from 'react';
-import { Sparkles, RotateCcw, Shuffle, HelpCircle, CheckCircle, Hand } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { Sparkles, RotateCcw, Shuffle, HelpCircle, CheckCircle, Hand, X } from 'lucide-react';
+import { soundEngine } from '../utils/audioEngine';
+
+// Función de detección geométrica de cuerda bajo las coordenadas del dedo/cursor
+function findStringAtCoordinates(x, y, strings) {
+  if (!strings || strings.length === 0) return null;
+
+  const stringElements = document.querySelectorAll('.string-lane[data-string-id]');
+  if (!stringElements || stringElements.length === 0) return null;
+
+  // 1. Probar colisión directa con tolerancia táctil ampliada
+  for (const el of stringElements) {
+    const rect = el.getBoundingClientRect();
+    const toleranceY = 22;
+    const toleranceX = 50;
+    if (
+      x >= rect.left - toleranceX &&
+      x <= rect.right + toleranceX &&
+      y >= rect.top - toleranceY &&
+      y <= rect.bottom + toleranceY
+    ) {
+      const stringId = el.getAttribute('data-string-id');
+      return strings.find((s) => s.id === stringId) || null;
+    }
+  }
+
+  // 2. Si el dedo está sobre la zona del mástil, encontrar la cuerda más cercana verticalmente
+  const fretboardEl = document.querySelector('.guitar-fretboard-card') || document.querySelector('.guitar-fretboard-card-wrapper');
+  if (fretboardEl) {
+    const fRect = fretboardEl.getBoundingClientRect();
+    if (x >= fRect.left - 60 && x <= fRect.right + 60 && y >= fRect.top - 20 && y <= fRect.bottom + 20) {
+      let closestString = null;
+      let minDistance = Infinity;
+      for (const el of stringElements) {
+        const rect = el.getBoundingClientRect();
+        const centerY = (rect.top + rect.bottom) / 2;
+        const dist = Math.abs(y - centerY);
+        if (dist < minDistance) {
+          minDistance = dist;
+          const stringId = el.getAttribute('data-string-id');
+          closestString = strings.find((s) => s.id === stringId);
+        }
+      }
+      if (minDistance < 80) {
+        return closestString;
+      }
+    }
+  }
+
+  return null;
+}
 
 export default function DragBadgeDeck({
   badges,
@@ -10,22 +61,138 @@ export default function DragBadgeDeck({
   onReset,
   onShuffle,
   onAutoSolve,
-  isComplete
+  isComplete,
+  strings,
+  onDropNote,
+  setVibratingString
 }) {
-  const handleDragStart = (e, badge) => {
-    e.dataTransfer.setData('application/json', JSON.stringify(badge));
-    e.dataTransfer.effectAllowed = 'move';
-    // Highlight the dragged element
-    e.target.classList.add('is-dragging');
+  const [activeDragBadge, setActiveDragBadge] = useState(null);
+  const [dragPos, setDragPos] = useState({ x: 0, y: 0 });
+  const [hoveredStringId, setHoveredStringId] = useState(null);
+
+  const startPosRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  const currentBadgeRef = useRef(null);
+
+  // Al presionar la ficha: Activar inmediatamente bajo el dedo con coordenadas exactas
+  const handlePointerDown = (e, badge) => {
+    const isPlaced = Object.values(placedNotes).some((placed) => placed?.id === badge.id);
+    if (isPlaced) return;
+
+    soundEngine.init();
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    startPosRef.current = { x: clientX, y: clientY };
+    currentBadgeRef.current = badge;
+    isDraggingRef.current = false;
+    
+    // Iniciar la posición exactamente en el punto de contacto del dedo
+    setDragPos({ x: clientX, y: clientY });
+    setActiveDragBadge(badge);
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignorar si el navegador no permite captura
+    }
   };
 
-  const handleDragEnd = (e) => {
-    e.target.classList.remove('is-dragging');
+  // Al mover el dedo o ratón: Mover la ficha flotante y detectar cuerdas
+  const handlePointerMove = (e) => {
+    if (!currentBadgeRef.current) return;
+
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    const dx = Math.abs(clientX - startPosRef.current.x);
+    const dy = Math.abs(clientY - startPosRef.current.y);
+
+    if (dx > 3 || dy > 3) {
+      isDraggingRef.current = true;
+    }
+
+    setDragPos({ x: clientX, y: clientY });
+
+    // Detección en tiempo real de cuerda
+    const targetStr = findStringAtCoordinates(clientX, clientY, strings);
+    setHoveredStringId(targetStr ? targetStr.id : null);
+  };
+
+  // Al soltar el dedo o ratón
+  const handlePointerUp = (e) => {
+    const badge = currentBadgeRef.current;
+    if (!badge) {
+      setActiveDragBadge(null);
+      setHoveredStringId(null);
+      return;
+    }
+
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignorar
+    }
+
+    if (isDraggingRef.current) {
+      // Se arrastró: Probar si se soltó sobre una cuerda
+      const targetStr = findStringAtCoordinates(e.clientX, e.clientY, strings);
+      if (targetStr) {
+        validateAndPlace(badge, targetStr);
+      }
+    } else {
+      // Fue un toque/clic simple sin arrastre: Seleccionar / Deseleccionar
+      handleBadgeClick(badge);
+    }
+
+    setActiveDragBadge(null);
+    setHoveredStringId(null);
+    isDraggingRef.current = false;
+    currentBadgeRef.current = null;
+  };
+
+  const handlePointerCancel = () => {
+    setActiveDragBadge(null);
+    setHoveredStringId(null);
+    isDraggingRef.current = false;
+    currentBadgeRef.current = null;
+  };
+
+  // Efecto para iluminar la cuerda en hover en tiempo real
+  useEffect(() => {
+    const stringLanes = document.querySelectorAll('.string-lane');
+    stringLanes.forEach((el) => {
+      const sId = el.getAttribute('data-string-id');
+      if (hoveredStringId && sId === hoveredStringId) {
+        el.classList.add('drag-over');
+      } else {
+        el.classList.remove('drag-over');
+      }
+    });
+  }, [hoveredStringId]);
+
+  const validateAndPlace = (badge, targetString) => {
+    const isMatch = badge.note === targetString.note;
+    if (isMatch) {
+      onDropNote(targetString.id, badge);
+      soundEngine.playString(targetString.frequency, targetString.noteKey);
+      if (setVibratingString) {
+        setVibratingString(targetString.id);
+        setTimeout(() => setVibratingString(null), 1200);
+      }
+    } else {
+      soundEngine.playErrorBuzz();
+      const targetElem = document.querySelector(`[data-string-id="${targetString.id}"]`);
+      if (targetElem) {
+        targetElem.classList.add('drop-error');
+        setTimeout(() => targetElem.classList.remove('drop-error'), 700);
+      }
+    }
   };
 
   const handleBadgeClick = (badge) => {
     if (selectedBadge?.id === badge.id) {
-      setSelectedBadge(null); // Deseleccionar si ya estaba seleccionado
+      setSelectedBadge(null);
     } else {
       setSelectedBadge(badge);
     }
@@ -33,9 +200,31 @@ export default function DragBadgeDeck({
 
   const completedCount = Object.keys(placedNotes).length;
   const progressPercent = Math.round((completedCount / 6) * 100);
+  const selectedNoteText = selectedBadge
+    ? notation === 'ES'
+      ? selectedBadge.solfege
+      : selectedBadge.note
+    : null;
 
   return (
     <div className="badge-deck-container">
+      {/* Ficha flotante renderizada en document.body mediante createPortal para coordenadas exactas en viewport */}
+      {activeDragBadge && typeof document !== 'undefined' && createPortal(
+        <div
+          className="floating-touch-badge"
+          style={{
+            left: `${dragPos.x}px`,
+            top: `${dragPos.y}px`
+          }}
+        >
+          <span className="floating-badge-note">
+            {notation === 'ES' ? activeDragBadge.solfege : activeDragBadge.note}
+          </span>
+          <span className="floating-badge-octave">{activeDragBadge.octave}</span>
+        </div>,
+        document.body
+      )}
+
       <div className="deck-header">
         <div className="deck-title-group">
           <div className="deck-title-icon">
@@ -44,7 +233,7 @@ export default function DragBadgeDeck({
           <div>
             <h3 className="deck-title">Banco de Notas Disponibles</h3>
             <p className="deck-subtitle">
-              Arrastra cada ficha a su cuerda correspondiente o haz clic para seleccionarla y luego toca la cuerda.
+              Arrastra con el dedo hacia la cuerda o toca una ficha y luego toca su cuerda en el mástil.
             </p>
           </div>
         </div>
@@ -66,6 +255,23 @@ export default function DragBadgeDeck({
         </div>
       </div>
 
+      {/* Banner de ficha seleccionada para colocar */}
+      {selectedBadge && !isComplete && (
+        <div className="selected-badge-banner">
+          <span className="selected-badge-text">
+            📍 Ficha seleccionada: <strong>{selectedNoteText}</strong> — Toca cualquier cuerda en el mástil arriba para ubicarla.
+          </span>
+          <button
+            type="button"
+            className="cancel-selection-btn"
+            onClick={() => setSelectedBadge(null)}
+            title="Cancelar selección"
+          >
+            <X size={14} /> Cancelar
+          </button>
+        </div>
+      )}
+
       {/* Cartel de felicitación cuando se completan las 6 cuerdas */}
       {isComplete ? (
         <div className="completion-banner">
@@ -86,31 +292,34 @@ export default function DragBadgeDeck({
           </button>
         </div>
       ) : (
-        /* Lista de fichas arrastrables */
+        /* Lista de fichas interactivas */
         <div className="badges-grid">
           {badges.map((badge) => {
             const isPlaced = Object.values(placedNotes).some(
               (placed) => placed?.id === badge.id
             );
             const isSelected = selectedBadge?.id === badge.id;
+            const isCurrentlyDragging = activeDragBadge?.id === badge.id;
             const noteText = notation === 'ES' ? badge.solfege : badge.note;
 
             return (
               <div
                 key={badge.id}
-                draggable={!isPlaced}
-                onDragStart={(e) => handleDragStart(e, badge)}
-                onDragEnd={handleDragEnd}
-                onClick={() => !isPlaced && handleBadgeClick(badge)}
+                onPointerDown={(e) => handlePointerDown(e, badge)}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
                 className={`note-chip ${isPlaced ? 'is-used' : ''} ${
                   isSelected ? 'is-selected' : ''
-                } ${badge.type === 'wound' ? 'chip-wound' : 'chip-plain'}`}
+                } ${isCurrentlyDragging ? 'is-picked-up' : ''} ${
+                  badge.type === 'wound' ? 'chip-wound' : 'chip-plain'
+                }`}
                 role="button"
                 tabIndex={isPlaced ? -1 : 0}
                 title={
                   isPlaced
                     ? `Nota ${noteText} ya ubicada`
-                    : `Ficha de nota ${noteText}`
+                    : `Ficha de nota ${noteText}. Arrastra hacia una cuerda o toca para ubicar.`
                 }
               >
                 <div className="chip-drag-handle">⋮⋮</div>

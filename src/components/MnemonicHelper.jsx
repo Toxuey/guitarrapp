@@ -1,8 +1,6 @@
-import React from 'react';
-import { X, Sparkles, BookOpen, Lightbulb, CheckCircle2 } from 'lucide-react';
-import { MNEMONICS } from '../data/guitarStrings';
+import { X, BookOpen, Lightbulb } from 'lucide-react';
 
-export default function MnemonicHelper({ isOpen, onClose, notation }) {
+export default function MnemonicHelper({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (

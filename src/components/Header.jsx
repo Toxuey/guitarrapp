@@ -1,4 +1,3 @@
-import React from 'react';
 import { Volume2, VolumeX, Sparkles, BookOpen, Music, Target, Zap } from 'lucide-react';
 
 export default function Header({
@@ -11,7 +10,6 @@ export default function Header({
   isMuted,
   toggleMute,
   openMnemonicModal,
-  score,
   streak
 }) {
   return (
@@ -39,7 +37,8 @@ export default function Header({
               onClick={() => onGuitarTypeChange('steel')}
               title="Sonido Real Grabado en Estudio: Guitarra Acústica (Cuerdas de Acero)"
             >
-              🎸 Acústica Real
+              <span className="btn-full-label">🎸 Acústica Real</span>
+              <span className="btn-short-label">🎸 Acústica</span>
             </button>
             <button
               type="button"
@@ -47,7 +46,8 @@ export default function Header({
               onClick={() => onGuitarTypeChange('nylon')}
               title="Sonido Real Grabado en Estudio: Guitarra Clásica / Española (Cuerdas de Nylon)"
             >
-              🎻 Clásica Nylon
+              <span className="btn-full-label">🎻 Clásica Nylon</span>
+              <span className="btn-short-label">🎻 Nylon</span>
             </button>
           </div>
 
@@ -59,7 +59,9 @@ export default function Header({
               onClick={() => setNotation('EN')}
               title="Cifrado Anglosajón (E, B, G, D, A, E)"
             >
-              <span className="notation-flag">🇺🇸</span> E - B - G
+              <span className="notation-flag">🇺🇸</span>
+              <span className="btn-full-label">E - B - G</span>
+              <span className="btn-short-label">EN</span>
             </button>
             <button
               type="button"
@@ -67,7 +69,9 @@ export default function Header({
               onClick={() => setNotation('ES')}
               title="Sistema Latino (Mi, Si, Sol, Re, La, Mi)"
             >
-              <span className="notation-flag">🇪🇸</span> Mi - Si - Sol
+              <span className="notation-flag">🇪🇸</span>
+              <span className="btn-full-label">Mi - Si - Sol</span>
+              <span className="btn-short-label">ES</span>
             </button>
           </div>
 
@@ -79,7 +83,8 @@ export default function Header({
             title="Trucos para memorizar el orden de las cuerdas"
           >
             <BookOpen size={18} />
-            <span className="btn-label">Trucos de Memoria</span>
+            <span className="btn-label btn-full-label">Trucos de Memoria</span>
+            <span className="btn-label btn-short-label">Trucos</span>
           </button>
 
           {/* Botón de Silencio/Audio */}

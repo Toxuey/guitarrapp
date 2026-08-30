@@ -1,11 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { Zap, Volume2, Trophy, Flame, RefreshCw, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Zap, Volume2, Trophy, Flame, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import { GUITAR_STRINGS } from '../data/guitarStrings';
 import { soundEngine } from '../utils/audioEngine';
 import confetti from 'canvas-confetti';
 
+function createQuestion(notation, playSound = false) {
+  const questionTypes = ['by-number', 'by-note', 'by-sound', 'by-gauge'];
+  const randomType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+  const targetString = GUITAR_STRINGS[Math.floor(Math.random() * GUITAR_STRINGS.length)];
+
+  const noteText = notation === 'ES' ? targetString.solfege : targetString.note;
+  let prompt;
+
+  if (randomType === 'by-number') {
+    prompt = `¿Qué nota corresponde a la ${targetString.number}ª cuerda de la guitarra?`;
+  } else if (randomType === 'by-note') {
+    prompt = `¿En qué número de cuerda se encuentra la nota "${noteText}" (${targetString.fullName})?`;
+  } else if (randomType === 'by-sound') {
+    prompt = `Escucha con atención: ¿A qué cuerda pertenece este sonido afinado?`;
+    if (playSound) {
+      setTimeout(() => {
+        soundEngine.playString(targetString.frequency, targetString.noteKey);
+      }, 300);
+    }
+  } else {
+    prompt = targetString.number === 6
+      ? '¿Cuál es la cuerda más gruesa y grave de la guitarra?'
+      : targetString.number === 1
+      ? '¿Cuál es la cuerda más fina y aguda de la guitarra?'
+      : `¿Cuál es el calibre (${targetString.gauge}) y frecuencia (${targetString.frequency} Hz) de esta cuerda?`;
+  }
+
+  const options = [...GUITAR_STRINGS].sort(() => Math.random() - 0.5);
+
+  return {
+    type: randomType,
+    prompt,
+    targetString,
+    correctAnswerId: targetString.id,
+    options
+  };
+}
+
 export default function QuizMode({ notation, score, setScore, streak, setStreak }) {
-  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [currentQuestion, setCurrentQuestion] = useState(() => createQuestion(notation, true));
   const [selectedOption, setSelectedOption] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -13,53 +51,11 @@ export default function QuizMode({ notation, score, setScore, streak, setStreak 
   const [bestStreak, setBestStreak] = useState(0);
 
   // Generar nueva pregunta
-  const generateQuestion = () => {
+  const generateQuestion = useCallback(() => {
     setIsAnswered(false);
     setSelectedOption(null);
     setIsCorrect(false);
-
-    const questionTypes = ['by-number', 'by-note', 'by-sound', 'by-gauge'];
-    const randomType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
-    const targetString = GUITAR_STRINGS[Math.floor(Math.random() * GUITAR_STRINGS.length)];
-
-    let prompt = '';
-    let correctAnswerId = targetString.id;
-    let options = [];
-
-    const noteText = notation === 'ES' ? targetString.solfege : targetString.note;
-
-    if (randomType === 'by-number') {
-      prompt = `¿Qué nota corresponde a la ${targetString.number}ª cuerda de la guitarra?`;
-    } else if (randomType === 'by-note') {
-      prompt = `¿En qué número de cuerda se encuentra la nota "${noteText}" (${targetString.fullName})?`;
-    } else if (randomType === 'by-sound') {
-      prompt = `Escucha con atención: ¿A qué cuerda pertenece este sonido afinado?`;
-      // Reproducir sonido automáticamente
-      setTimeout(() => {
-        soundEngine.playString(targetString.frequency, targetString.noteKey);
-      }, 300);
-    } else {
-      prompt = targetString.number === 6
-        ? '¿Cuál es la cuerda más gruesa y grave de la guitarra?'
-        : targetString.number === 1
-        ? '¿Cuál es la cuerda más fina y aguda de la guitarra?'
-        : `¿Cuál es el calibre (${targetString.gauge}) y frecuencia (${targetString.frequency} Hz) de esta cuerda?`;
-    }
-
-    // Opciones (todas las 6 cuerdas)
-    options = [...GUITAR_STRINGS].sort(() => Math.random() - 0.5);
-
-    setCurrentQuestion({
-      type: randomType,
-      prompt,
-      targetString,
-      correctAnswerId,
-      options
-    });
-  };
-
-  useEffect(() => {
-    generateQuestion();
+    setCurrentQuestion(createQuestion(notation, true));
   }, [notation]);
 
   const handleSelectOption = (stringOption) => {

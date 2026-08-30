@@ -314,15 +314,45 @@ class GuitarAudioEngine {
     osc.start();
     osc.stop(this.ctx.currentTime + 0.26);
   }
+
+  // Click de metrónomo acústico (sonido de madera / percusión limpio)
+  playMetronomeClick(accent = false) {
+    if (this.isMuted) return;
+    this.init();
+    if (!this.ctx) return;
+
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(accent ? 1100 : 750, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(accent ? 350 : 250, this.ctx.currentTime + 0.04);
+
+      gain.gain.setValueAtTime(accent ? 0.25 : 0.12, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.045);
+    } catch (e) {
+      console.warn('Metronome audio error:', e);
+    }
+  }
 }
 
 export const soundEngine = new GuitarAudioEngine();
 
 // Iniciar precarga de samples reales en el primer toque o carga
 if (typeof window !== 'undefined') {
-  window.addEventListener('click', () => {
+  const unlockAudio = () => {
+    soundEngine.init();
     if (!soundEngine.isPreloaded) {
       soundEngine.preloadCommonSamples();
     }
-  }, { once: true });
+  };
+  window.addEventListener('click', unlockAudio, { once: true });
+  window.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
 }

@@ -157,6 +157,9 @@ function App() {
               onShuffle={handleShuffle}
               onAutoSolve={handleAutoSolve}
               isComplete={isComplete}
+              strings={GUITAR_STRINGS}
+              onDropNote={handleDropNote}
+              setVibratingString={setVibratingString}
             />
           </div>
         )}
